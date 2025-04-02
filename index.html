@@ -7,22 +7,23 @@
     <title>Test AWS Lambda</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <h1>Simple Demo for PUT, GET, and DELETE</h1>
-    <p id="lambda-info">
-        <!-- loaded with AJAX -->
-    </p>
+    <h1>Simple inventory app!</h1>
+    <button id="load-data">Load All Items!</button>
+    <div id="lambda-info">
+        <!-- Table will be dynamically loaded here -->
+    </div>
 
-    <hr>
+    <!-- <hr>
     <button id="send-data">Send Data</button>
     <p>Sends an example JSON object to the server with id 11111</p>
     <script>
         document.getElementById("send-data").onclick = function () {
             let xhr = new XMLHttpRequest();
-            xhr.open("PUT", "Your Lambda here");
+            xhr.open("PUT", "https://zfpizh0oh6.execute-api.us-east-2.amazonaws.com/items");
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send(JSON.stringify({
                 "id": "6666666",
@@ -30,32 +31,88 @@
                 "name": "test put value"
             }));
         }
-    </script>
+    </script> -->
 
-    <button id="load-data">Load Data</button>
-    <p>Loads data from the server</p>
+     
+    <!-- <p>Loads data from the server</p> -->
     <script>
         document.getElementById("load-data").onclick = function () {
             let lambda = document.getElementById("lambda-info");
             let xhr = new XMLHttpRequest();
             xhr.addEventListener("load", function () {
-                lambda.innerHTML = xhr.response;
+                const items = JSON.parse(xhr.response);
+                let table = `<table border="1">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Action</th>
+                                </tr>`;
+                items.forEach(item => {
+                    table += `<tr>
+                                <td>${item.id}</td>
+                                <td>${item.name}</td>
+                                <td>${item.price}</td>
+                                <td><button onclick="deleteItem('${item.id}')">Delete(rip)</button></td>
+                              </tr>`;
+                });
+                table += `</table>`;
+                lambda.innerHTML = table;
             });
-            xhr.open("GET", "Your Lambda here");
+            xhr.open("GET", "https://zfpizh0oh6.execute-api.us-east-2.amazonaws.com/items");
             xhr.send();
         }
-
     </script>
 
     <hr>
-    <button id="delete-data">Delete Data</button>
-    <p>Deletes a JSON object from the server with 11111</p>
+    <h2>Add New Item To Database</h2>
+    <form id="add-item-form">
+        <label for="item-id">ID:</label><br>
+        <input type="text" id="item-id" name="item-id"><br><br>
+        <label for="item-name">Name:</label><br>
+        <input type="text" id="item-name" name="item-name"><br><br>
+        <label for="item-price">Price:</label><br>
+        <input type="number" id="item-price" name="item-price"><br><br>
+        <button type="button" id="add-item">Add Item</button>
+    </form>
+
+    <script>
+        document.getElementById("add-item").onclick = function () {
+            const id = document.getElementById("item-id").value;
+            const name = document.getElementById("item-name").value;
+            const price = document.getElementById("item-price").value;
+            let xhr = new XMLHttpRequest();
+            xhr.open("PUT", "https://zfpizh0oh6.execute-api.us-east-2.amazonaws.com/items");
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(JSON.stringify({
+                "id": id,
+                "name": name,
+                "price": parseFloat(price)
+            }));
+
+            xhr.onload = function () {   
+                    document.getElementById("load-data").click(); 
+            };
+        }
+    </script>
+
+    <hr>
+    <!-- <button id="delete-data">Delete Data</button>
+    <p>Deletes a JSON object from the server with 11111</p> -->
     <script>
         document.getElementById("delete-data").onclick = function () {
             let xhr = new XMLHttpRequest();
-            xhr.open("DELETE", "Your Lambda here");
+            xhr.open("DELETE", "https://zfpizh0oh6.execute-api.us-east-2.amazonaws.com/items/6666666");
             xhr.setRequestHeader("Content-Type", "application/json");
             xhr.send();
+        }
+
+        function deleteItem(id) {
+            let xhr = new XMLHttpRequest();
+            xhr.open("DELETE", `https://zfpizh0oh6.execute-api.us-east-2.amazonaws.com/items/${id}`);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send();
+            document.getElementById("load-data").click();  // this line of code is the goat so you don't have to click load button every time you wanna refresh the table
         }
     </script>
 </body>

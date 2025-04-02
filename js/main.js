@@ -16,3 +16,4 @@ function loaded() {
 export function sayHello() {
     return 'hello';
 }
+
